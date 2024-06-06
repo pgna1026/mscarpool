@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅방: {{ room_name }}</title>
+</head>
+<body>
+    <h1>채팅방: {{ room_name }}</h1>
+
+    <div id="nicknameForm">
+        <input type="text" id="nicknameInput" placeholder="닉네임을 입력하세요" required>
+        <button id="joinChat">입장</button>
+    </div>
+
+    <div id="chatSection" style="display: none;">
+        <div class="messages"></div>
+        <form id="chatForm">
+            <input type="hidden" class="nickname" required>
+            <input type="text" class="message" placeholder="메시지" required>
+            <input type="submit" value="전송하기">
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var roomName = "{{ room_name }}";
+            var socket = io.connect("http://" + document.domain + ":" + location.port);
+
+            $('#joinChat').on("click", function() {
+                var nickname = $("#nicknameInput").val().trim();
+                if (nickname) {
+                    $("input.nickname").val(nickname);
+                    $("#nicknameForm").hide();
+                    $("#chatSection").show();
+
+                    socket.emit("join", {room: roomName, nickname: nickname});
+                }
+            });
+
+            socket.on("connect", function() {
+                console.log("Connected to server");
+
+                $('#chatForm').on("submit", function(e) {
+                    e.preventDefault();
+                    var message = $("input.message").val().trim();
+                    var nickname = $("input.nickname").val();
+                    if (message) {
+                        socket.emit("chat", {
+                            room: roomName,
+                            nickname: nickname,
+                            message: message
+                        });
+                        $("input.message").val("").focus();
+                    }
+                });
+            });
+
+            // 채팅 기록 수신
+            socket.on("chat_history", function(history) {
+                console.log("Received chat history:", history); // 디버깅 로그
+                $("div.messages").html("");  // Clear the messages div
+                history.forEach(function(msg) {
+                    console.log("Chat history message:", msg); // 디버깅 로그
+                    $("div.messages").append("<div><b style='color:blue'>" + msg.nickname + "</b> " + msg.message + "</div>");
+                });
+            });
+
+            // 새로운 채팅 메시지 수신
+            socket.on("response", function(msg) {
+                console.log("Received chat message:", msg); // 디버깅 로그
+                $("div.messages").append("<div><b style='color:blue'>" + msg.nickname + "</b> " + msg.message + "</div>");
+            });
+        });
+    </script>   
+</body>
+</html>
