@@ -7,6 +7,10 @@
     <style>
         .hidden { display: none; }
     </style>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
 </head>
 <body>
     <h1>마송고 카풀 서비스</h1>
@@ -21,6 +25,18 @@
     <div id="roomLinks"></div>
 
     <script>
+        // Firebase 초기화
+        var firebaseConfig = {
+            apiKey: "AIzaSyD440GeW-QjzwjkaA9fkZ8oMtWsV-aFoPk",
+            authDomain: "mscarpool-5784e.firebaseapp.com",
+            projectId: "mscarpool-5784e",
+            storageBucket: "mscarpool-5784e.appspot.com",
+            messagingSenderId: "268039699884",
+            appId: "1:268039699884:web:e88c8dc7217fb3d7c80e09"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
         document.addEventListener("DOMContentLoaded", function() {
             const hostButton = document.getElementById('hostButton');
             const hostForm = document.getElementById('hostForm');
@@ -46,25 +62,19 @@
             });
 
             function loadRooms() {
-                const rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
-                rooms.forEach(room => {
-                    createRoomLink(room);
+                db.collection("rooms").get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        createRoomLink(doc.data().name);
+                    });
+                    updateSearch();
                 });
-                updateSearch();
-            }
-
-            function saveRooms(rooms) {
-                localStorage.setItem('rooms', JSON.stringify(rooms));
             }
 
             function addRoom(roomName) {
-                const rooms = JSON.parse(localStorage.getItem('rooms') || '[]');
-                if (!rooms.includes(roomName)) {
-                    rooms.push(roomName);
-                    saveRooms(rooms);
+                db.collection("rooms").add({ name: roomName }).then((docRef) => {
                     createRoomLink(roomName);
                     updateSearch();
-                }
+                });
             }
 
             function createRoomLink(roomName) {
