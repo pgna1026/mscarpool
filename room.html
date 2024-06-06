@@ -7,6 +7,10 @@
     <style>
         .hidden { display: none; }
     </style>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
 </head>
 <body>
     <h1 id="roomTitle">채팅방</h1>
@@ -26,6 +30,18 @@
     </div>
 
     <script>
+        // Firebase 초기화
+        var firebaseConfig = {
+            apiKey: "AIzaSyD440GeW-QjzwjkaA9fkZ8oMtWsV-aFoPk",
+            authDomain: "mscarpool-5784e.firebaseapp.com",
+            projectId: "mscarpool-5784e",
+            storageBucket: "mscarpool-5784e.appspot.com",
+            messagingSenderId: "268039699884",
+            appId: "1:268039699884:web:e88c8dc7217fb3d7c80e09"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
+
         document.addEventListener("DOMContentLoaded", function() {
             const urlParams = new URLSearchParams(window.location.search);
             const roomName = urlParams.get('room');
@@ -62,18 +78,23 @@
             });
 
             function loadChatHistory(roomName) {
-                const chatHistory = JSON.parse(localStorage.getItem(roomName) || '[]');
-                chatHistory.forEach(msg => {
-                    displayMessage(msg.nickname, msg.message);
+                db.collection("rooms").doc(roomName).collection("messages").orderBy("timestamp").get().then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        const msg = doc.data();
+                        displayMessage(msg.nickname, msg.message);
+                    });
                 });
             }
 
             function addMessage(roomName, nickname, message) {
-                const chatHistory = JSON.parse(localStorage.getItem(roomName) || '[]');
-                const msg = { nickname, message };
-                chatHistory.push(msg);
-                localStorage.setItem(roomName, JSON.stringify(chatHistory));
-                displayMessage(nickname, message);
+                const timestamp = new Date();
+                db.collection("rooms").doc(roomName).collection("messages").add({
+                    nickname,
+                    message,
+                    timestamp
+                }).then(() => {
+                    displayMessage(nickname, message);
+                });
             }
 
             function displayMessage(nickname, message) {
