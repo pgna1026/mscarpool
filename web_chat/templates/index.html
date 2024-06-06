@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마송고 카풀 서비스</title>
+</head>
+<body>
+    <h1>마송고 카풀 서비스</h1>
+
+    <button id="hostButton">호스트</button>
+    <div id="hostForm" style="display:none;">
+        <input type="text" id="roomName" placeholder="방 이름">
+        <button id="createRoom">방 만들기</button>
+    </div>
+    <div id="roomLinks"></div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var socket = io.connect("http://" + document.domain + ":" + location.port);
+
+            $('#hostButton').on('click', function() {
+                $('#hostForm').toggle();
+            });
+
+            $('#createRoom').on('click', function() {
+                var roomName = $('#roomName').val().trim();
+                if (roomName) {
+                    socket.emit('create_room', roomName);
+                    $('#roomName').val('');
+                }
+            });
+
+            socket.on('room_created', function(roomName) {
+                var roomLink = "<a href='/room/" + encodeURIComponent(roomName) + "'>채팅방: " + roomName + "</a><br>";
+                $('#roomLinks').append(roomLink);
+            });
+
+            $.get('/rooms', function(rooms) {
+                rooms.forEach(function(room) {
+                    var roomLink = "<a href='/room/" + encodeURIComponent(room) + "'>채팅방: " + room + "</a><br>";
+                    $('#roomLinks').append(roomLink);
+                });
+            });
+        });
+    </script>   
+</body>
+</html>
