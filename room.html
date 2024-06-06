@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅방</title>
+    <style>
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1 id="roomTitle">채팅방</h1>
+
+    <div id="nicknameForm">
+        <input type="text" id="nicknameInput" placeholder="닉네임을 입력하세요" required>
+        <button id="joinChat">입장</button>
+    </div>
+
+    <div id="chatSection" class="hidden">
+        <div class="messages"></div>
+        <form id="chatForm">
+            <input type="hidden" class="nickname" required>
+            <input type="text" class="message" placeholder="메시지" required>
+            <input type="submit" value="전송하기">
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomName = urlParams.get('room');
+            const roomTitle = document.getElementById('roomTitle');
+            const nicknameForm = document.getElementById('nicknameForm');
+            const nicknameInput = document.getElementById('nicknameInput');
+            const joinChatButton = document.getElementById('joinChat');
+            const chatSection = document.getElementById('chatSection');
+            const chatForm = document.getElementById('chatForm');
+            const messageInput = document.querySelector('.message');
+            const messagesDiv = document.querySelector('.messages');
+
+            roomTitle.textContent = `채팅방: ${roomName}`;
+
+            joinChatButton.addEventListener('click', function() {
+                const nickname = nicknameInput.value.trim();
+                if (nickname) {
+                    document.querySelector('.nickname').value = nickname;
+                    nicknameForm.classList.add('hidden');
+                    chatSection.classList.remove('hidden');
+                    loadChatHistory(roomName);
+                }
+            });
+
+            chatForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = messageInput.value.trim();
+                const nickname = document.querySelector('.nickname').value;
+                if (message) {
+                    addMessage(roomName, nickname, message);
+                    messageInput.value = '';
+                    messageInput.focus();
+                }
+            });
+
+            function loadChatHistory(roomName) {
+                const chatHistory = JSON.parse(localStorage.getItem(roomName) || '[]');
+                chatHistory.forEach(msg => {
+                    displayMessage(msg.nickname, msg.message);
+                });
+            }
+
+            function addMessage(roomName, nickname, message) {
+                const chatHistory = JSON.parse(localStorage.getItem(roomName) || '[]');
+                const msg = { nickname, message };
+                chatHistory.push(msg);
+                localStorage.setItem(roomName, JSON.stringify(chatHistory));
+                displayMessage(nickname, message);
+            }
+
+            function displayMessage(nickname, message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.innerHTML = `<b style='color:blue'>${nickname}</b> ${message}`;
+                messagesDiv.appendChild(messageDiv);
+            }
+        });
+    </script>
+</body>
+</html>
