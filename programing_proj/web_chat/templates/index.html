@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마송고 카풀 서비스</title>
+    <style>
+        .roomLink small {
+            font-size: 0.8em;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h1>마송고 카풀 서비스</h1>
+
+    <button id="hostButton">호스트</button>
+    <div id="hostForm" style="display:none;">
+        <input type="text" id="roomName" placeholder="방 이름" required>
+        <input type="text" id="departure" placeholder="출발지" required>
+        <input type="text" id="destination" placeholder="도착지" required>
+        <button id="createRoom">방 만들기</button>
+    </div>
+
+    <input type="text" id="searchInput" placeholder="방 이름, 출발지, 도착지 검색">
+    <div id="roomLinks"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var socket = io.connect("http://" + document.domain + ":" + location.port);
+
+            $('#hostButton').on('click', function() {
+                $('#hostForm').toggle();
+            });
+
+            $('#createRoom').on('click', function() {
+                var roomName = $('#roomName').val().trim();
+                var departure = $('#departure').val().trim();
+                var destination = $('#destination').val().trim();
+                if (roomName && departure && destination) {
+                    socket.emit('create_room', { roomName: roomName, departure: departure, destination: destination });
+                    $('#roomName').val('');
+                    $('#departure').val('');
+                    $('#destination').val('');
+                }
+            });
+
+            socket.on('room_created', function(room) {
+                var roomLink = "<a href='/room/" + encodeURIComponent(room.roomName) + "' class='roomLink'>채팅방: " + room.roomName + " <small>(" + room.departure + " -> " + room.destination + ")</small></a><br>";
+                $('#roomLinks').append(roomLink);
+                updateSearch();
+            });
+
+            $.get('/rooms', function(rooms) {
+                rooms.forEach(function(room) {
+                    var roomLink = "<a href='/room/" + encodeURIComponent(room.roomName) + "' class='roomLink'>채팅방: " + room.roomName + " <small>(" + room.departure + " -> " + room.destination + ")</small></a><br>";
+                    $('#roomLinks').append(roomLink);
+                });
+                updateSearch();
+            });
+
+            // 검색 기능 구현
+            $('#searchInput').on('input', function() {
+                updateSearch();
+            });
+
+            function updateSearch() {
+                var searchQuery = $('#searchInput').val().toLowerCase();
+                $('.roomLink').each(function() {
+                    var roomText = $(this).text().toLowerCase();
+                    if (roomText.indexOf(searchQuery) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+        });
+    </script>   
+</body>
+</html>

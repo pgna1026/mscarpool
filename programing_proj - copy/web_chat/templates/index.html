@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마송고 카풀 서비스</title>
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+        .group {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>마송고 카풀 서비스</h1>
+    <button id="hostButton">호스트</button>
+    <div id="hostForm" style="display:none;">
+        <input type="text" id="roomName" placeholder="방 이름" required>
+        <input type="text" id="departure" placeholder="출발지" required>
+        <input type="text" id="destination" placeholder="도착지" required>
+        <button id="createRoom">방 만들기</button>
+    </div>
+
+    <input type="text" id="searchInput" placeholder="방 이름, 출발지, 도착지 검색">
+    <div id="roomLinks"></div>
+
+    <div id="map"></div>
+    <button id="matchButton">매칭 알고리즘 실행</button>
+    <div id="groups"></div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var map;
+            var markers = [];
+
+            function initMap() {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 37.5665, lng: 126.9780 }, // 서울 좌표
+                    zoom: 12
+                });
+
+                map.addListener('click', function(event) {
+                    addMarker(event.latLng);
+                });
+            }
+
+            function addMarker(location) {
+                var marker = new google.maps.Marker({
+                    position: location,
+                    map: map
+                });
+                markers.push(marker);
+                updateCoordinates(marker.getPosition());
+            }
+
+            function updateCoordinates(location) {
+                // 출발지와 도착지 좌표를 업데이트하는 로직을 구현하세요.
+                console.log('Coordinates:', location.lat(), location.lng());
+            }
+
+            $('#hostButton').on('click', function() {
+                $('#hostForm').toggle();
+            });
+
+            $('#createRoom').on('click', function() {
+                var roomName = $('#roomName').val().trim();
+                var departure = $('#departure').val().trim();
+                var destination = $('#destination').val().trim();
+                if (roomName && departure && destination) {
+                    // 방 생성 로직을 구현하세요.
+                    $('#roomName').val('');
+                    $('#departure').val('');
+                    $('#destination').val('');
+                }
+            });
+
+            $('#matchButton').on('click', function() {
+                runMatchingAlgorithm();
+            });
+
+            function runMatchingAlgorithm() {
+                // 서버로부터 출발지와 도착지 좌표를 받아와서 클러스터링을 수행합니다.
+                $.get('/get_coordinates', function(data) {
+                    var coordinates = data.coordinates;
+                    $.post('/run_kmeans', { coordinates: coordinates }, function(groups) {
+                        displayGroups(groups);
+                    });
+                });
+            }
+
+            function displayGroups(groups) {
+                $('#groups').empty();
+                groups.forEach(function(group, index) {
+                    var groupDiv = $('<div class="group">').text('Group ' + (index + 1) + ':');
+                    group.forEach(function(coord) {
+                        groupDiv.append('<br> (' + coord[0] + ', ' + coord[1] + ')');
+                    });
+                    $('#groups').append(groupDiv);
+                });
+            }
+
+            initMap();
+        });
+    </script>
+</body>
+</html>
