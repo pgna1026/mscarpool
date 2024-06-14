@@ -6,16 +6,17 @@
     <title>마송고 카풀 서비스</title>
     <style>
         #map {
-            height: 400px;
             width: 100%;
+            height: 400px;
         }
-        .group {
-            margin-top: 10px;
+        .message-container {
+            position: relative;
         }
     </style>
 </head>
 <body>
     <h1>마송고 카풀 서비스</h1>
+
     <button id="hostButton">호스트</button>
     <div id="hostForm" style="display:none;">
         <input type="text" id="roomName" placeholder="방 이름" required>
@@ -26,42 +27,35 @@
 
     <input type="text" id="searchInput" placeholder="방 이름, 출발지, 도착지 검색">
     <div id="roomLinks"></div>
-
+    
     <div id="map"></div>
-    <button id="matchButton">매칭 알고리즘 실행</button>
-    <div id="groups"></div>
+    <button id="matchButton">매칭하기</button>
+    <div id="matchResults"></div>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.4/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
-    <script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/leaflet.css" />
+
+    <script type="text/javascript">
         $(document).ready(function() {
-            var map;
-            var markers = [];
+            var socket = io.connect("http://" + document.domain + ":" + location.port);
+            var map = L.map('map').setView([37.5665, 126.9780], 12); // 초기 위치 서울
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
 
-            function initMap() {
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: 37.5665, lng: 126.9780 }, // 서울 좌표
-                    zoom: 12
-                });
+            var departureMarker, destinationMarker;
 
-                map.addListener('click', function(event) {
-                    addMarker(event.latLng);
-                });
-            }
-
-            function addMarker(location) {
-                var marker = new google.maps.Marker({
-                    position: location,
-                    map: map
-                });
-                markers.push(marker);
-                updateCoordinates(marker.getPosition());
-            }
-
-            function updateCoordinates(location) {
-                // 출발지와 도착지 좌표를 업데이트하는 로직을 구현하세요.
-                console.log('Coordinates:', location.lat(), location.lng());
-            }
+            map.on('click', function(e) {
+                if (!departureMarker) {
+                    departureMarker = L.marker(e.latlng).addTo(map);
+                    $('#departure').val(e.latlng.lat + ',' + e.latlng.lng);
+                } else if (!destinationMarker) {
+                    destinationMarker = L.marker(e.latlng).addTo(map);
+                    $('#destination').val(e.latlng.lat + ',' + e.latlng.lng);
+                }
+            });
 
             $('#hostButton').on('click', function() {
                 $('#hostForm').toggle();
@@ -72,39 +66,62 @@
                 var departure = $('#departure').val().trim();
                 var destination = $('#destination').val().trim();
                 if (roomName && departure && destination) {
-                    // 방 생성 로직을 구현하세요.
+                    socket.emit('create_room', { roomName: roomName, departure: departure, destination: destination });
                     $('#roomName').val('');
                     $('#departure').val('');
                     $('#destination').val('');
+                    if (departureMarker) {
+                        map.removeLayer(departureMarker);
+                        departureMarker = null;
+                    }
+                    if (destinationMarker) {
+                        map.removeLayer(destinationMarker);
+                        destinationMarker = null;
+                    }
                 }
             });
 
             $('#matchButton').on('click', function() {
-                runMatchingAlgorithm();
+                socket.emit('request_match');
             });
 
-            function runMatchingAlgorithm() {
-                // 서버로부터 출발지와 도착지 좌표를 받아와서 클러스터링을 수행합니다.
-                $.get('/get_coordinates', function(data) {
-                    var coordinates = data.coordinates;
-                    $.post('/run_kmeans', { coordinates: coordinates }, function(groups) {
-                        displayGroups(groups);
-                    });
+            socket.on('room_created', function(room) {
+                var roomLink = "<a href='/room/" + encodeURIComponent(room.roomName) + "' class='roomLink'>채팅방: " + room.roomName + " <small>(" + room.departure + " -> " + room.destination + ")</small></a><br>";
+                $('#roomLinks').append(roomLink);
+                updateSearch();
+            });
+
+            $.get('/rooms', function(rooms) {
+                rooms.forEach(function(room) {
+                    var roomLink = "<a href='/room/" + encodeURIComponent(room.roomName) + "' class='roomLink'>채팅방: " + room.roomName + " <small>(" + room.departure + " -> " + room.destination + ")</small></a><br>";
+                    $('#roomLinks').append(roomLink);
+                });
+                updateSearch();
+            });
+
+            socket.on('match_results', function(results) {
+                $('#matchResults').html("");
+                results.forEach(function(group, index) {
+                    var groupElement = $("<div>Group " + (index + 1) + ": " + group.join(', ') + "</div>");
+                    $('#matchResults').append(groupElement);
+                });
+            });
+
+            function updateSearch() {
+                var searchQuery = $('#searchInput').val().toLowerCase();
+                $('.roomLink').each(function() {
+                    var roomText = $(this).text().toLowerCase();
+                    if (roomText.indexOf(searchQuery) !== -1) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
                 });
             }
 
-            function displayGroups(groups) {
-                $('#groups').empty();
-                groups.forEach(function(group, index) {
-                    var groupDiv = $('<div class="group">').text('Group ' + (index + 1) + ':');
-                    group.forEach(function(coord) {
-                        groupDiv.append('<br> (' + coord[0] + ', ' + coord[1] + ')');
-                    });
-                    $('#groups').append(groupDiv);
-                });
-            }
-
-            initMap();
+            $('#searchInput').on('input', function() {
+                updateSearch();
+            });
         });
     </script>
 </body>
