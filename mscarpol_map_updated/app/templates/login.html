@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+</head>
+<body>
+    <h1>로그인</h1>
+    <!-- 가장 최신 플래시 메시지 표시 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% set latest_message = messages[-1] %}
+            <ul class="flashes">
+                <li class="flash-{{ latest_message[0] }}">{{ latest_message[1] }}</li>
+            </ul>
+        {% endif %}
+    {% endwith %}
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.username.label }} {{ form.username(size=32) }}
+        </div>
+        <div>
+            {{ form.password.label }} {{ form.password(size=32) }}
+        </div>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+    <a href="{{ url_for('index') }}"><button>이전 페이지로 돌아가기</button></a>
+</body>
+</html>
