@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>검색 결과</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>검색 결과</h1>
+    </header>
+    <main>
+        <ul>
+            {% for room in rooms %}
+                <li>
+                    <a href="{{ url_for('chat_room', room_id=room.id) }}">{{ room.title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('index') }}">뒤로 가기</a>
+    </main>
+</body>
+</html>
