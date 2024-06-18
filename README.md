@@ -27,9 +27,12 @@ deactivate
 venv 지우기
 
 
-
-
+.
+.
+.
 <azure에서>
+
+
 웹 앱 만들기
 
 azure 무료 구독 활성화
