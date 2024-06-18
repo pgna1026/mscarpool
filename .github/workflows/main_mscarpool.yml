@@ -31,15 +31,7 @@ jobs:
         run: pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-      - name: Initialize and apply database migrations
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          flask db init
-          flask db migrate -m "Initial migration."
-          flask db upgrade
 
-          
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
 
