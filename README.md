@@ -103,7 +103,7 @@ https://portal.azure.com/
 
 개발 도구 -> 고급 도구 -> 이동 선택 -> SSH 클릭
 """
-cd home/site/wwwroot
+cd /home/site/wwwroot
 source /antenv/bin/activate
 flask db upgrade
 """ 입력 해서 마이그래이션 적용
