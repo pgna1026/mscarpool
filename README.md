@@ -32,10 +32,18 @@ venv 지우기
 .
 <azure에서>
 
+run.py를
+"""
+from app import app, socketio
 
-웹 앱 만들기
+if __name__ == '__main__':
+ socketio.run(app, debug=True)
+"""
+와 같이 수정
 
 azure 무료 구독 활성화
+
+vscode에서 azure app service, azure accont 확장프로그램 설치
 
 az login
 구독 선택
