@@ -41,6 +41,43 @@ if __name__ == '__main__':
 """
 와 같이 수정
 
+requirements.tat를 
+"""
+Flask==2.0.3
+Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.32
+Flask-Migrate==4.0.7
+Flask-SocketIO==5.1.1
+Flask-WTF==0.15.1
+Flask-Login==0.5.0
+WTForms==2.3.3
+Werkzeug==2.0.3
+python-engineio>=4.0.0
+python-socketio>=5.0.2
+scikit-learn
+numpy
+gunicorn
+eventlet
+"""
+로 수정(numpy, gunicorn, eventlet 추가함)
+
+startup.txt 생성
+"""gunicorn --worker-class eventlet -w 1 run:app"""
+
+config.py 수정
+"""import os
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your_secret_key'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///site.db' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+"""
+
+
+
 azure 무료 구독 활성화
 
 vscode에서 azure app service, azure accont 확장프로그램 설치
@@ -59,9 +96,18 @@ az webapp create --resource-group <리소스 그룹명> --plan <앱서비스 플
 래포지토리에 앱 업로드
 
 
-
 https://portal.azure.com/
 에 가서 app services 들어가서 <내 앱 이름> 들어가서 배포->배포 센터 들어가서 깃허브 연동
+
+설정 -> 환경 변수 들어가 추가-> config의 시크릿키 추가
+
+개발 도구 -> 고급 도구 -> 이동 선택 -> SSH 클릭
+"""
+cd home/site/wwwroot
+source /antenv/bin/activate
+flask db upgrade
+""" 입력 해서 마이그래이션 적용
+
 
 좀 기다리면 배포됨(상태는 깃허브에서 확인)
 
