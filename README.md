@@ -57,16 +57,7 @@ az webapp create --resource-group <리소스 그룹명> --plan <앱서비스 플
 
 깃허브 들어가서 래포지토리 생성
 래포지토리에 앱 업로드
-.github/workflows 만들어서 그 안에 <앱 명>.yml 추가 
-거기에 
-      - name: Initialize and apply database migrations
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          flask db init
-          flask db migrate -m "Initial migration."
-          flask db upgrade
-처럼 기본 세팅 추가
+
 
 
 https://portal.azure.com/
