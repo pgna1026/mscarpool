@@ -1,30 +1,32 @@
-지피티와 함께 몆시간 삽질끝에 만든 대작!
+#마송고등학교 카풀 서비스!!
 
-<로컬에서>
+##<로컬에서 사용법>
 
-가상환경 만들기
+-
 
-python -m venv venv
+###가상환경 만들기
 
-venv\Scripts\activate #안되면 win+x눌러 PowerShell을 관리자 권한으로 실행 -> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -> y
+1. python -m venv venv
 
-pip install -r requirements.txt
+2. venv\Scripts\activate #안되면 win+x눌러 PowerShell을 관리자 권한으로 실행 -> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -> y
 
-flask db init
+3. pip install -r requirements.txt
 
-flask db migrate -m "Initial migration."
+4. flask db init
 
-flask db upgrade
+5. flask db migrate -m "Initial migration."
 
-python run.py
+6. flask db upgrade
 
+7. python run.py
 
+-
 
-가상환경 리셋
+###가상환경 리셋
 
-deactivate
+1. deactivate
 
-venv 지우기
+2. venv 지우기
 
 
 .
